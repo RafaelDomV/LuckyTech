@@ -1,0 +1,36 @@
+.sidebar{
+
+    width:230px;
+
+    min-height:100vh;
+
+    background:#111827;
+
+    color:white;
+
+    padding:20px;
+
+}
+
+
+.sidebar h2{
+
+    text-align:center;
+
+}
+
+
+.sidebar p{
+
+    padding:12px;
+
+    cursor:pointer;
+
+}
+
+
+.sidebar p:hover{
+
+    background:#374151;
+
+}

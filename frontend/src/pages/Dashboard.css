@@ -1,0 +1,33 @@
+.cards{
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(4,1fr);
+
+    gap:20px;
+
+}
+
+
+
+.card{
+
+    background:white;
+
+    padding:20px;
+
+    border-radius:10px;
+
+    box-shadow:
+    0 4px 10px rgba(0,0,0,.15);
+
+}
+
+
+
+.card h2{
+
+    font-size:35px;
+
+}
