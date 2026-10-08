@@ -44,21 +44,27 @@ router.post(
 
 
 router.get(
-
     "/",
-
+    verificarToken,
+    verificarRol(
+        "ADMIN",
+        "INVENTARIO",
+        "VENTAS"
+    ),
     obtenerProductos
-
 );
 
 
 
 router.get(
-
     "/:id",
-
+    verificarToken,
+    verificarRol(
+        "ADMIN",
+        "INVENTARIO",
+        "VENTAS"
+    ),
     obtenerProducto
-
 );
 
 

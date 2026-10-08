@@ -1,53 +1,78 @@
+import { NavLink } from "react-router-dom";
 import "./Sidebar.css";
 
-function Sidebar(){
 
-    return(
+function Sidebar({ usuario }) {
 
-        <div className="sidebar">
+    const esAdmin =
+        usuario?.rol === "ADMIN";
+
+    const esInventario =
+        usuario?.rol === "INVENTARIO";
+
+    const esVentas =
+        usuario?.rol === "VENTAS";
+
+
+    return (
+
+        <aside className="sidebar">
 
             <h2>
                 LuckyTech
             </h2>
 
 
-            <nav>
+            <nav aria-label="Menú principal">
+
+                {/* TODOS LOS USUARIOS */}
+                <NavLink to="/dashboard">
+                    Dashboard
+                </NavLink>
 
 
-                <p>
-                     Dashboard
-                </p>
+                {/* ADMIN E INVENTARIO */}
+                {
+                    (esAdmin || esInventario) && (
+                        <>
+                            <NavLink to="/productos">
+                                Productos
+                            </NavLink>
+
+                            <NavLink to="/categorias">
+                                Categorías
+                            </NavLink>
+
+                            <NavLink to="/inventario">
+                                Inventario
+                            </NavLink>
+                        </>
+                    )
+                }
 
 
-                <p>
-                     Productos
-                </p>
+                {/* SOLO ADMIN */}
+                {
+                    esAdmin && (
+                        <NavLink to="/usuarios">
+                            Usuarios
+                        </NavLink>
+                    )
+                }
 
 
-                <p>
-                     Categorías
-                </p>
-
-
-                <p>
-                     Inventario
-                </p>
-
-
-                <p>
-                     Usuarios
-                </p>
-
-
-                <p>
-                     Ventas
-                </p>
-
+                {/* ADMIN Y VENTAS */}
+                {
+                    (esAdmin || esVentas) && (
+                        <NavLink to="/ventas">
+                            Ventas
+                        </NavLink>
+                    )
+                }
 
             </nav>
 
-
-        </div>
+        </aside>
 
     );
 

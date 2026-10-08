@@ -14,12 +14,19 @@ export const registrarEntrada = async(req,res)=>{
             motivo
         } = req.body;
 
-        if(cantidad <= 0){
+        const cantidadNumero = Number(cantidad);
 
+        if(
+            !Number.isFinite(cantidadNumero)
+            ||
+            !Number.isInteger(cantidadNumero)
+            ||
+            cantidadNumero <= 0
+        ){
             return res.status(400).json({
-                mensaje:"La cantidad debe ser mayor a cero"
+                mensaje:
+                    "La cantidad debe ser un número entero mayor a cero"
             });
-        
         }
 
          if(!motivo){
@@ -46,7 +53,7 @@ export const registrarEntrada = async(req,res)=>{
         }
 
 
-        item.stock += cantidad;
+        item.stock += cantidadNumero;
 
         await item.save();
 
@@ -58,7 +65,7 @@ export const registrarEntrada = async(req,res)=>{
 
             tipo:"ENTRADA",
 
-            cantidad,
+            cantidad: cantidadNumero,
 
             motivo,
 
@@ -103,12 +110,19 @@ export const registrarSalida = async(req,res)=>{
             motivo
         } = req.body;
 
-        if(cantidad <= 0){
-        
+        const cantidadNumero = Number(cantidad);
+            
+        if(
+            !Number.isFinite(cantidadNumero)
+            ||
+            !Number.isInteger(cantidadNumero)
+            ||
+            cantidadNumero <= 0
+        ){
             return res.status(400).json({
-                mensaje:"La cantidad debe ser mayor a cero"
+                mensaje:
+                    "La cantidad debe ser un número entero mayor a cero"
             });
-        
         }
 
          if(!motivo){
@@ -137,7 +151,7 @@ export const registrarSalida = async(req,res)=>{
 
 
 
-        if(item.stock < cantidad){
+        if(item.stock < cantidadNumero){
 
             return res.status(400).json({
 
@@ -149,7 +163,7 @@ export const registrarSalida = async(req,res)=>{
 
 
 
-        item.stock -= cantidad;
+        item.stock -= cantidadNumero;
 
 
         await item.save();
@@ -162,7 +176,7 @@ export const registrarSalida = async(req,res)=>{
 
             tipo:"SALIDA",
 
-            cantidad,
+            cantidad: cantidadNumero,
 
             motivo,
 
@@ -204,7 +218,10 @@ export const obtenerMovimientos = async(req,res)=>{
         const movimientos =
         await MovimientoInventario.find()
         .populate("producto")
-        .populate("usuario");
+        .populate("usuario", "nombre correo rol")
+        .sort({
+            createdAt: -1
+        });
 
 
         res.json(movimientos);
@@ -232,12 +249,20 @@ export const registrarAjuste = async(req,res)=>{
         } = req.body;
 
 
-        if(cantidad === 0){
+        const cantidadNumero = Number(cantidad);
 
+
+        if(
+            !Number.isFinite(cantidadNumero)
+            ||
+            !Number.isInteger(cantidadNumero)
+            ||
+            cantidadNumero === 0
+        ){
             return res.status(400).json({
-                mensaje:"El ajuste no puede ser cero"
+                mensaje:
+                    "El ajuste debe ser un número entero diferente de cero"
             });
-
         }
 
 
@@ -265,7 +290,7 @@ export const registrarAjuste = async(req,res)=>{
         }
 
 
-        const nuevoStock = item.stock + cantidad;
+        const nuevoStock = item.stock + cantidadNumero;
 
 
         if(nuevoStock < 0){
@@ -291,7 +316,7 @@ export const registrarAjuste = async(req,res)=>{
 
             tipo:"AJUSTE",
 
-            cantidad,
+            cantidad: cantidadNumero,
 
             motivo,
 

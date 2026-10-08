@@ -1,212 +1,132 @@
-import { useEffect, useState } from "react";
-import Layout from "../components/Layout";
-import "./Dashboard.css";
+import {
+    Link,
+    useOutletContext
+} from "react-router-dom";
 
 
-function Dashboard(){
+function Dashboard() {
 
-    const [usuario,setUsuario] = useState(null);
-
-
-    useEffect(()=>{
-
-        const datosUsuario = 
-        localStorage.getItem("usuario");
+    const { usuario } = useOutletContext();
 
 
-        if(datosUsuario){
+    const esAdmin =
+        usuario?.rol === "ADMIN";
 
-            setUsuario(
-                JSON.parse(datosUsuario)
-            );
+    const esInventario =
+        usuario?.rol === "INVENTARIO";
 
-        }
-
-    },[]);
-
+    const esVentas =
+        usuario?.rol === "VENTAS";
 
 
-    const cerrarSesion = ()=>{
+    return (
 
-        localStorage.removeItem("token");
+        <section>
 
-        localStorage.removeItem("usuario");
-
-        window.location.href="/";
-
-    };
+            <h1>
+                Dashboard LuckyTech
+            </h1>
 
 
-
-    return(
-
-    <Layout>
-
-
-        <h1>
-            Dashboard LuckyTech
-        </h1>
+            <p>
+                Bienvenido, {usuario.nombre}.
+                Selecciona un módulo para comenzar.
+            </p>
 
 
-        {
-            usuario && (
+            <div className="dashboard-accesos">
 
-                <div className="cards">
+                {/* ADMIN E INVENTARIO */}
+                {
+                    (esAdmin || esInventario) && (
+                        <>
 
-                    <h3>
-                        Bienvenido:
-                        {" "}
-                        {usuario.nombre}
-                    </h3>
+                            <Link
+                                className="dashboard-acceso"
+                                to="/productos"
+                            >
+                                <h2>
+                                    Productos
+                                </h2>
 
-
-                    <p>
-                        Rol:
-                        {" "}
-                        {usuario.rol}
-                    </p>
-
-                </div>
-
-            )
-        }
+                                <p>
+                                    Administra y consulta el catálogo de productos.
+                                </p>
+                            </Link>
 
 
+                            <Link
+                                className="dashboard-acceso"
+                                to="/categorias"
+                            >
+                                <h2>
+                                    Categorías
+                                </h2>
 
-        <hr/>
-
-
-        <h2>
-            Resumen del sistema
-        </h2>
-
-
-
-        <div className="card">
-
-
-            <div className="card">
-
-                <h2>
-                    📦
-                </h2>
-
-                <h3>
-                    Productos
-                </h3>
-
-                <p>
-                    52 productos registrados
-                </p>
-
-                <button
-                onClick={()=>{
-                    window.location.href="/productos"
-                }}
-                >
-                    Ver productos
-                </button>
-
-            </div>
+                                <p>
+                                    Administra las categorías registradas.
+                                </p>
+                            </Link>
 
 
+                            <Link
+                                className="dashboard-acceso"
+                                to="/inventario"
+                            >
+                                <h2>
+                                    Inventario
+                                </h2>
+
+                                <p>
+                                    Consulta y registra movimientos de inventario.
+                                </p>
+                            </Link>
+
+                        </>
+                    )
+                }
 
 
-            <div className="card">
+                {/* SOLO ADMIN */}
+                {
+                    esAdmin && (
+                        <Link
+                            className="dashboard-acceso"
+                            to="/usuarios"
+                        >
+                            <h2>
+                                Usuarios
+                            </h2>
 
-                <h2>
-                    🗂
-                </h2>
+                            <p>
+                                Administra las cuentas y permisos del sistema.
+                            </p>
+                        </Link>
+                    )
+                }
 
-                <h3>
-                    Categorías
-                </h3>
 
-                <p>
-                    9 categorías activas
-                </p>
+                {/* ADMIN Y VENTAS */}
+                {
+                    (esAdmin || esVentas) && (
+                        <Link
+                            className="dashboard-acceso"
+                            to="/ventas"
+                        >
+                            <h2>
+                                Ventas
+                            </h2>
 
-                <button
-                onClick={()=>{
-                    window.location.href="/categorias"
-                }}
-                >
-                    Ver categorías
-                </button>
+                            <p>
+                                Registra y consulta las ventas de LuckyTech.
+                            </p>
+                        </Link>
+                    )
+                }
 
             </div>
 
-
-
-
-            <div className="card">
-
-                <h2>
-                    📋
-                </h2>
-
-                <h3>
-                    Inventario
-                </h3>
-
-                <p>
-                    Historial de movimientos
-                </p>
-
-                <button
-                onClick={()=>{
-                    window.location.href="/inventario"
-                }}
-                >
-                    Ver inventario
-                </button>
-
-            </div>
-
-
-
-
-            <div className="card">
-
-                <h2>
-                    👥
-                </h2>
-
-                <h3>
-                    Usuarios
-                </h3>
-
-                <p>
-                    Administración de usuarios
-                </p>
-
-                <button
-                onClick={()=>{
-                    window.location.href="/usuarios"
-                }}
-                >
-                    Ver usuarios
-                </button>
-
-            </div>
-
-
-
-        </div>
-
-
-
-        <br/>
-
-
-        <button onClick={cerrarSesion}>
-
-            Cerrar sesión
-
-        </button>
-
-
-    </Layout>
+        </section>
 
     );
 

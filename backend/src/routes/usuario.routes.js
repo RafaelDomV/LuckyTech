@@ -4,7 +4,9 @@ import {
 
     crearUsuario,
 
-    obtenerUsuarios
+    obtenerUsuarios,
+
+    actualizarUsuario
 
 } from "../controllers/usuario.controller.js";
 
@@ -44,6 +46,16 @@ router.get(
 
 );
 
+router.put(
 
+    "/:id",
+
+    verificarToken,
+
+    verificarRol("ADMIN"),
+
+    actualizarUsuario
+
+);
 
 export default router;
