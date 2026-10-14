@@ -4,11 +4,9 @@ import {
     useState
 } from "react";
 
-import {
-    useOutletContext
-} from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-import api from "../services/api";
+import ventasService from "../services/ventas.service";
 
 import "./Ventas.css";
 
@@ -45,8 +43,7 @@ function Ventas() {
     const [error, setError] =
         useState("");
 
-    const { usuario } =
-        useOutletContext();
+    const { usuario } = useAuth();
 
 
     const esAdmin =
@@ -82,23 +79,24 @@ function Ventas() {
             setCargando(true);
 
             const [
-                respuestaProductos,
-                respuestaVentas
+                productos,
+                ventas
             ] = await Promise.all([
-
-                api.get("/productos"),
-
-                api.get("/ventas")
-
+            
+                ventasService.obtenerProductos(),
+            
+                ventasService.obtenerVentas()
+            
             ]);
 
 
             setProductos(
-                respuestaProductos.data
+                productos
             );
 
+
             setVentas(
-                respuestaVentas.data
+                ventas
             );
 
 
@@ -511,14 +509,14 @@ function Ventas() {
 
 
             const respuesta =
-                await api.post(
-                    "/ventas",
+                await ventasService.registrarVenta(
                     datosVenta
                 );
 
 
+
             setMensaje(
-                `Venta ${respuesta.data.venta.folio} registrada correctamente.`
+                `Venta ${respuesta.venta.folio} registrada correctamente.`
             );
 
 
@@ -565,8 +563,226 @@ function Ventas() {
 
     };
     
+
+    const imprimirTicket = (venta) => {
+
+        const ventana =
+            window.open(
+                "",
+                "_blank",
+                "width=400,height=600"
+            );
+
+
+        if (!ventana) {
+            return;
+        }
+
+
+        ventana.document.write(`
+
+            <html>
+
+            <head>
+
+                <title>
+                    Ticket ${venta.folio}
+                </title>
+
+
+                <style>
+
+                    body {
+
+                        font-family: monospace;
+                        padding: 20px;
+                        font-size: 14px;
+
+                    }
+
+
+                    h2 {
+
+                        text-align:center;
+
+                    }
+
+
+                    .linea {
+
+                        border-top:1px dashed #000;
+                        margin:10px 0;
+
+                    }
+
+
+                    .producto {
+
+                        display:flex;
+                        justify-content:space-between;
+
+                    }
+
+
+                    .total {
+
+                        font-size:18px;
+                        font-weight:bold;
+                        text-align:right;
+
+                    }
+
+
+                    .cancelada {
+
+                        color:red;
+                        text-align:center;
+                        font-weight:bold;
+
+                    }
+
+                </style>
+
+
+            </head>
+
+
+            <body>
+
+
+                <h2>
+                    LuckyTech
+                </h2>
+
+
+                <p>
+                    Folio:
+                    ${venta.folio}
+                </p>
+
+
+                <p>
+                    Fecha:
+                    ${new Date(
+                        venta.createdAt
+                    ).toLocaleString(
+                        "es-MX"
+                    )}
+                </p>
+
+
+                <p>
+                    Vendedor:
+                    ${venta.usuario?.nombre || "N/A"}
+                </p>
+
+
+                <div class="linea"></div>
+
+
+                ${
+                    venta.productos.map(
+                        producto => `
+
+                        <div class="producto">
+
+                            <span>
+                                ${producto.cantidad}
+                                x
+                                ${producto.nombre}
+                            </span>
+
+
+                            <span>
+                                ${formatoDinero(
+                                    producto.subtotal
+                                )}
+                            </span>
+
+                        </div>
+
+                        `
+                    ).join("")
+                }
+
+
+                <div class="linea"></div>
+
+
+                <p class="total">
+
+                    Total:
+                    ${formatoDinero(
+                        venta.total
+                    )}
+
+                </p>
+
+
+                <p>
+                    Pago:
+                    ${venta.metodoPago}
+                </p>
+
+
+                ${
+                    venta.estado === "CANCELADA"
+                    ?
+
+                    `
+
+                    <div class="linea"></div>
+
+                    <p class="cancelada">
+
+                        VENTA CANCELADA
+
+                    </p>
+
+
+                    <p>
+
+                        Motivo:
+                        ${venta.motivoCancelacion || ""}
+
+                    </p>
+
+                    `
+
+                    :
+
+                    ""
+
+                }
+
+
+                <div class="linea"></div>
+
+
+                <p style="text-align:center">
+
+                    Gracias por su compra
+
+                </p>
+
+
+            </body>
+
+
+            </html>
+
+        `);
+
+
+        ventana.document.close();
+
+
+        ventana.print();
+
+    };
+
+
     const alternarDetalleVenta = (ventaId) => {
-    
         setVentaDetalleId(
             ventaDetalleId === ventaId
                 ? null
@@ -636,17 +852,14 @@ function Ventas() {
         
         
             const respuesta =
-                await api.put(
-                    `/ventas/${ventaACancelar._id}/cancelar`,
-                    {
-                        motivo:
-                            motivoCancelacion.trim()
-                    }
+                await ventasService.cancelarVenta(
+                    ventaACancelar._id,
+                    motivoCancelacion.trim()
                 );
             
             
             setMensaje(
-                `Venta ${respuesta.data.venta.folio} cancelada correctamente.`
+                `Venta ${respuesta.venta.folio} cancelada correctamente.`
             );
         
         
@@ -664,9 +877,11 @@ function Ventas() {
         
             setVista("HISTORIAL");
         
-            setVentaDetalleId(
-                ventaId
-            );
+            setVentaDetalleId(ventaId);
+
+            setTimeout(() => {
+                cargarDatos();
+            }, 300);
         
         
         } catch (error) {
@@ -1627,24 +1842,37 @@ function Ventas() {
 
                                     
                                         {
-                                            esAdmin
-                                            &&
-                                            ventaDetalle.estado === "COMPLETADA"
-                                            &&
                                             <div className="venta-detalle-acciones">
-                                            
+                                                                                    
                                                 <button
                                                     type="button"
-                                                    className="btn-cancelar-venta"
+                                                    className="btn-imprimir-ticket"
                                                     onClick={() =>
-                                                        abrirCancelacion(
-                                                            ventaDetalle
-                                                        )
+                                                        imprimirTicket(ventaDetalle)
                                                     }
                                                 >
-                                                    Cancelar venta
+                                                    🖨 Imprimir ticket 
                                                 </button>
                                                 
+                                                
+                                                {
+                                                    esAdmin
+                                                    &&
+                                                    ventaDetalle.estado === "COMPLETADA"
+                                                    &&
+                                                    <button
+                                                        type="button"
+                                                        className="btn-cancelar-venta"
+                                                        onClick={() =>
+                                                            abrirCancelacion(
+                                                                ventaDetalle
+                                                            )
+                                                        }
+                                                    >
+                                                        Cancelar venta
+                                                    </button>
+                                                }
+                                            
                                             </div>
                                         }
 

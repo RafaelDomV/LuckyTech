@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import api from "../services/api";
+import usuariosService from "../services/usuarios.service";
+import { useAuth } from "../context/AuthContext";
 import "./Usuarios.css";
-
 
 const formularioInicial = {
     nombre: "",
@@ -41,22 +41,10 @@ function Usuarios() {
     const [error, setError] =
         useState("");
 
+    const { usuario: usuarioActual, actualizarUsuario } = useAuth();
 
-    const usuarioActual = (() => {
 
-        try {
 
-            return JSON.parse(
-                localStorage.getItem("usuario")
-            );
-
-        } catch {
-
-            return null;
-
-        }
-
-    })();
 
 
     const idUsuarioActual =
@@ -78,11 +66,12 @@ function Usuarios() {
 
             setCargando(true);
 
-            const respuesta =
-                await api.get("/usuarios");
+            const usuarios =
+                await usuariosService.obtenerUsuarios();
+
 
             setUsuarios(
-                respuesta.data
+                usuarios
             );
 
         } catch (error) {
@@ -228,8 +217,8 @@ function Usuarios() {
 
 
                 const respuesta =
-                    await api.put(
-                        `/usuarios/${usuarioEditando}`,
+                    await usuariosService.actualizarUsuario(
+                        usuarioEditando,
                         datosUsuario
                     );
 
@@ -255,11 +244,8 @@ function Usuarios() {
                             respuesta.data.usuario.rol
                     };
 
-                    localStorage.setItem(
-                        "usuario",
-                        JSON.stringify(
-                            usuarioLocal
-                        )
+                    actualizarUsuario(
+                        usuarioLocal
                     );
 
                 }
@@ -271,8 +257,7 @@ function Usuarios() {
 
             } else {
 
-                await api.post(
-                    "/usuarios",
+                await usuariosService.crearUsuario(
                     {
                         ...datosUsuario,
                         password:
@@ -355,12 +340,9 @@ function Usuarios() {
                 setError("");
 
 
-                await api.put(
-                    `/usuarios/${usuario._id}`,
-                    {
-                        activo:
-                            nuevoEstado
-                    }
+                await usuariosService.cambiarEstadoUsuario(
+                    usuario._id,
+                    nuevoEstado
                 );
 
 

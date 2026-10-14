@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import api from "../services/api";
+import categoriasService from "../services/categorias.service";
 import "./Categorias.css";
 
 
@@ -50,12 +50,11 @@ function Categorias() {
 
             setCargando(true);
 
-            const respuesta =
-                await api.get("/categorias");
+            const categorias =
+                await categoriasService.obtenerCategorias();
 
-            setCategorias(
-                respuesta.data
-            );
+
+            setCategorias(categorias);
 
         } catch (error) {
 
@@ -171,30 +170,34 @@ function Categorias() {
 
 
             if (categoriaEditando) {
-
-                await api.put(
-                    `/categorias/${categoriaEditando}`,
+            
+                await categoriasService.actualizarCategoria(
+                    categoriaEditando,
                     datosCategoria
                 );
-
+            
+            
                 setMensaje(
                     "Categoría actualizada correctamente."
                 );
-
+            
+            
             } else {
-
-                await api.post(
-                    "/categorias",
+            
+            
+                await categoriasService.crearCategoria(
                     {
                         ...datosCategoria,
-                        activo: true
+                        activo:true
                     }
                 );
-
+            
+            
                 setMensaje(
                     "Categoría registrada correctamente."
                 );
-
+            
+            
             }
 
 
@@ -258,12 +261,9 @@ function Categorias() {
                 setMensaje("");
                 setError("");
 
-                await api.put(
-                    `/categorias/${categoria._id}`,
-                    {
-                        activo:
-                            nuevoEstado
-                    }
+                await categoriasService.cambiarEstadoCategoria(
+                    categoria._id,
+                    nuevoEstado
                 );
 
                 setMensaje(

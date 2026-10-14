@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import api from "../services/api";
+import productosService from "../services/productos.service";
 import "./Productos.css";
 
 const formularioInicial = {
@@ -50,18 +50,16 @@ function Productos() {
             setCargando(true);
 
             const [
-                respuestaProductos,
-                respuestaCategorias
+                productos,
+                categorias
             ] = await Promise.all([
-                api.get("/productos"),
-                api.get("/categorias")
-            ]);
+                productosService.obtenerProductos(),
+                productosService.obtenerCategorias()
+            ]);            
 
-            setProductos(respuestaProductos.data);
+            setProductos(productos);
 
-            setCategorias(
-                respuestaCategorias.data
-            );
+            setCategorias(categorias);
 
         } catch (error) {
 
@@ -81,21 +79,26 @@ function Productos() {
 
 
     const cargarProductos = async () => {
-
+    
         try {
-
-            const respuesta = await api.get(
-                "/productos"
-            );
-
-            setProductos(respuesta.data);
-
+        
+            const productos =
+                await productosService.obtenerProductos();
+        
+        
+            setProductos(productos);
+        
+        
         } catch (error) {
-
+        
             console.error(error);
-
+        
+            setError(
+                "No fue posible actualizar los productos."
+            );
+        
         }
-
+    
     };
 
     const editarProducto = (producto) => {
@@ -163,11 +166,9 @@ function Productos() {
             setMensaje("");
             setError("");
 
-            await api.put(
-                `/productos/${producto._id}`,
-                {
-                    activo: nuevoEstado
-                }
+            await productosService.cambiarEstadoProducto(
+                producto._id,
+                nuevoEstado
             );
 
             setMensaje(
@@ -270,19 +271,21 @@ function Productos() {
         
             if (productoEditando) {
             
-                await api.put(
-                    `/productos/${productoEditando}`,
+                await productosService.actualizarProducto(
+                    productoEditando,
                     datosProducto
                 );
+            
             
                 setMensaje(
                     "Producto actualizado correctamente."
                 );
             
+            
             } else {
             
-                await api.post(
-                    "/productos",
+            
+                await productosService.crearProducto(
                     {
                         ...datosProducto,
                         stock: 0,
@@ -290,9 +293,11 @@ function Productos() {
                     }
                 );
             
+            
                 setMensaje(
                     "Producto registrado correctamente."
                 );
+            
             
             }
         

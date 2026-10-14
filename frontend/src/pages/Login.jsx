@@ -1,47 +1,53 @@
 import { useState } from "react";
-import api from "../services/api";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import authService from "../services/auth.service";
 
 
 function Login(){
 
     const [correo,setCorreo] = useState("");
     const [password,setPassword] = useState("");
+    const [error,setError] = useState("");
+
+    const { login } = useAuth();
+
+    const navigate = useNavigate();
 
 
     const iniciarSesion = async(e)=>{
 
         e.preventDefault();
 
+        setError("");
+
+
         try{
 
-            const respuesta = await api.post(
-                "/auth/login",
-                {
-                    correo,
-                    password
-                }
+            const respuesta = await authService.iniciarSesion(
+                correo,
+                password
             );
 
 
-            
-            localStorage.setItem(
-                "token",
-                respuesta.data.token
+            login(
+                respuesta.usuario,
+                respuesta.token
             );
-            
-            
-            localStorage.setItem(
-                "usuario",
-                JSON.stringify(respuesta.data.usuario)
-            );
-            
-            
-            window.location.href="/dashboard";
+
+
+            navigate("/dashboard");
 
 
         }catch(error){
 
-            console.log(error);
+            console.error(error);
+
+
+            setError(
+                error.response?.data?.mensaje ||
+                "Credenciales no válidas"
+            );
 
         }
 
@@ -60,6 +66,18 @@ function Login(){
             <h2>
                 Inicio de sesión
             </h2>
+
+
+            {
+                error && (
+
+                    <p style={{color:"red"}}>
+                        {error}
+                    </p>
+
+                )
+            }
+
 
 
             <form onSubmit={iniciarSesion}>

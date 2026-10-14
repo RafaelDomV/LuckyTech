@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import api from "../services/api";
+import inventarioService from "../services/inventario.service";
+import { useAuth } from "../context/AuthContext";
 import "./Inventario.css";
 
 
@@ -38,21 +39,7 @@ function Inventario() {
         useState("");
 
 
-    const usuario = (() => {
-
-        try {
-
-            return JSON.parse(
-                localStorage.getItem("usuario")
-            );
-
-        } catch {
-
-            return null;
-
-        }
-
-    })();
+    const { usuario } = useAuth();
 
 
     const esAdmin =
@@ -72,26 +59,26 @@ function Inventario() {
 
             setCargando(true);
 
-            const [
-                respuestaMovimientos,
-                respuestaProductos
-            ] = await Promise.all([
-
-                api.get("/inventario"),
-
-                api.get("/productos")
-
-            ]);
-
-
-            setMovimientos(
-                respuestaMovimientos.data
-            );
-
-
-            setProductos(
-                respuestaProductos.data
-            );
+    const [
+        movimientos,
+        productos
+    ] = await Promise.all([
+    
+        inventarioService.obtenerMovimientos(),
+    
+        inventarioService.obtenerProductos()
+    
+    ]);
+    
+    
+    setMovimientos(
+        movimientos
+    );
+    
+    
+    setProductos(
+        productos
+    );
 
 
         } catch (error) {
@@ -240,43 +227,31 @@ function Inventario() {
                 };
 
 
-                let endpoint = "";
-
-
-                if (
-                    formulario.tipo === "ENTRADA"
-                ) {
-
-                    endpoint =
-                        "/inventario/entrada";
-
+                if (formulario.tipo === "ENTRADA") {
+                
+                    await inventarioService.registrarEntrada(
+                        datos
+                    );
+                
                 }
 
 
-                if (
-                    formulario.tipo === "SALIDA"
-                ) {
-
-                    endpoint =
-                        "/inventario/salida";
-
+                if (formulario.tipo === "SALIDA") {
+                
+                    await inventarioService.registrarSalida(
+                        datos
+                    );
+                
                 }
 
 
-                if (
-                    formulario.tipo === "AJUSTE"
-                ) {
-
-                    endpoint =
-                        "/inventario/ajuste";
-
+                if (formulario.tipo === "AJUSTE") {
+                
+                    await inventarioService.registrarAjuste(
+                        datos
+                    );
+                
                 }
-
-
-                await api.post(
-                    endpoint,
-                    datos
-                );
 
 
                 setMensaje(
