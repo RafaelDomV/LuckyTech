@@ -565,222 +565,553 @@ function Ventas() {
     
 
     const imprimirTicket = (venta) => {
-
-        const ventana =
-            window.open(
-                "",
-                "_blank",
-                "width=400,height=600"
-            );
-
-
+    
+        const ventana = window.open(
+            "",
+            "_blank",
+            "width=360,height=700"
+        );
+    
         if (!ventana) {
+        
+            setError(
+                "El navegador bloqueó la ventana de impresión. " +
+                "Permite las ventanas emergentes para imprimir el ticket."
+            );
+        
             return;
+        
         }
-
-
+    
+    
+        const escaparHTML = (valor) => {
+        
+            const entidades = {
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            };
+        
+            return String(valor ?? "").replace(
+                /[&<>"']/g,
+                (caracter) => entidades[caracter]
+            );
+        
+        };
+    
+    
+        const fechaVenta =
+            venta.createdAt &&
+            !Number.isNaN(
+                new Date(venta.createdAt).getTime()
+            )
+                ? new Date(venta.createdAt).toLocaleString(
+                    "es-MX",
+                    {
+                        dateStyle: "short",
+                        timeStyle: "short"
+                    }
+                )
+                : "No disponible";
+            
+            
+        const esCancelada =
+            venta.estado === "CANCELADA";
+            
+            
+        const folio =
+            escaparHTML(venta.folio || "Sin folio");
+            
+            
+        const vendedor =
+            escaparHTML(
+                venta.usuario?.nombre || "No disponible"
+            );
+        
+        
+        const metodoPago =
+            escaparHTML(
+                venta.metodoPago || "No disponible"
+            );
+        
+        
+        const fecha =
+            escaparHTML(fechaVenta);
+        
+        
+        const total =
+            escaparHTML(
+                formatoDinero(
+                    Number(venta.total || 0)
+                )
+            );
+        
+        
+        const productosHTML = (
+            Array.isArray(venta.productos)
+                ? venta.productos
+                : []
+        ).map((producto) => {
+        
+            const cantidad =
+                Number(producto.cantidad || 0);
+        
+        
+            const precioUnitario =
+                Number(
+                    producto.precioUnitario ??
+                    (
+                        cantidad > 0
+                            ? Number(producto.subtotal || 0) / cantidad
+                            : 0
+                    )
+                );
+            
+            
+            const subtotal =
+                Number(
+                    producto.subtotal ??
+                    precioUnitario * cantidad
+                );
+            
+            
+            const nombre =
+                escaparHTML(
+                    producto.nombre || "Producto"
+                );
+            
+            
+            const detallePrecio =
+                escaparHTML(
+                    `${cantidad} × ${formatoDinero(precioUnitario)}`
+                );
+            
+            
+            const subtotalFormato =
+                escaparHTML(
+                    formatoDinero(subtotal)
+                );
+            
+            
+            return `
+            
+                <div class="producto">
+            
+                    <div class="producto-nombre">
+                        ${nombre}
+                    </div>
+            
+                    <div class="producto-detalle">
+            
+                        <span>
+                            ${detallePrecio}
+                        </span>
+            
+                        <strong>
+                            ${subtotalFormato}
+                        </strong>
+            
+                    </div>
+            
+                </div>
+            
+            `;
+            
+        }).join("");
+    
+    
+        const motivoCancelacion =
+            escaparHTML(
+                venta.motivoCancelacion || "No especificado"
+            );
+        
+        
+        ventana.document.open();
+        
         ventana.document.write(`
-
-            <html>
-
+        
+            <!DOCTYPE html>
+        
+            <html lang="es">
+        
             <head>
-
+        
+                <meta charset="UTF-8">
+        
+                <meta
+                    name="viewport"
+                    content="width=device-width, initial-scale=1.0"
+                >
+        
                 <title>
-                    Ticket ${venta.folio}
+                    Ticket ${folio}
                 </title>
-
-
+        
                 <style>
-
+        
+                    @page {
+                        size: 80mm auto;
+                        margin: 0;
+                    }
+        
+        
+                    * {
+                        box-sizing: border-box;
+                    }
+        
+        
+                    html,
                     body {
-
-                        font-family: monospace;
-                        padding: 20px;
-                        font-size: 14px;
-
+                        width: 80mm;
+                        margin: 0;
+                        padding: 0;
                     }
-
-
-                    h2 {
-
-                        text-align:center;
-
+        
+        
+                    body {
+                        font-family: "Courier New", monospace;
+                        font-size: 11px;
+                        line-height: 1.4;
+                        color: #000;
+                        background: #fff;
                     }
-
-
-                    .linea {
-
-                        border-top:1px dashed #000;
-                        margin:10px 0;
-
+        
+        
+                    .ticket {
+                        width: 72mm;
+                        margin: 0 auto;
+                        padding: 4mm 0 5mm;
                     }
-
-
+        
+        
+                    .encabezado {
+                        text-align: center;
+                        margin-bottom: 12px;
+                    }
+        
+        
+                    .logo-texto {
+                        font-size: 23px;
+                        font-weight: bold;
+                        letter-spacing: 1px;
+                        margin: 0 0 4px;
+                    }
+        
+        
+                    .subtitulo {
+                        font-size: 10px;
+                        margin: 0;
+                        letter-spacing: 1px;
+                    }
+        
+        
+                    .separador {
+                        border-top: 1px dashed #000;
+                        margin: 9px 0;
+                    }
+        
+        
+                    .dato {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        gap: 8px;
+                        margin: 5px 0;
+                    }
+        
+        
+                    .dato span {
+                        flex-shrink: 0;
+                    }
+        
+        
+                    .dato strong {
+                        text-align: right;
+                        overflow-wrap: anywhere;
+                    }
+        
+        
+                    .titulo-seccion {
+                        font-weight: bold;
+                        text-align: center;
+                        margin: 10px 0;
+                    }
+        
+        
                     .producto {
-
-                        display:flex;
-                        justify-content:space-between;
-
+                        margin: 10px 0;
+                        break-inside: avoid;
+                        page-break-inside: avoid;
                     }
-
-
+        
+        
+                    .producto-nombre {
+                        font-weight: bold;
+                        overflow-wrap: anywhere;
+                        margin-bottom: 3px;
+                    }
+        
+        
+                    .producto-detalle {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: flex-start;
+                        gap: 6px;
+                    }
+        
+        
+                    .producto-detalle span {
+                        overflow-wrap: anywhere;
+                    }
+        
+        
+                    .producto-detalle strong {
+                        text-align: right;
+                        white-space: nowrap;
+                    }
+        
+        
                     .total {
-
-                        font-size:18px;
-                        font-weight:bold;
-                        text-align:right;
-
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        gap: 8px;
+                        font-size: 15px;
+                        font-weight: bold;
+                        margin: 10px 0;
                     }
-
-
-                    .cancelada {
-
-                        color:red;
-                        text-align:center;
-                        font-weight:bold;
-
+        
+        
+                    .total strong {
+                        text-align: right;
+                        white-space: nowrap;
                     }
-
+        
+        
+                    .estado-cancelado {
+                        border: 2px solid #000;
+                        padding: 7px 4px;
+                        text-align: center;
+                        font-size: 14px;
+                        font-weight: bold;
+                        margin: 12px 0;
+                    }
+        
+        
+                    .motivo {
+                        overflow-wrap: anywhere;
+                        margin: 8px 0;
+                    }
+        
+        
+                    .pie {
+                        text-align: center;
+                        margin-top: 15px;
+                        font-size: 10px;
+                    }
+        
+        
+                    .pie strong {
+                        display: block;
+                        margin-bottom: 4px;
+                    }
+        
+        
+                    @media print {
+        
+                        html,
+                        body {
+                            width: 80mm !important;
+                            margin: 0 !important;
+                            padding: 0 !important;
+                        }
+        
+        
+                        .ticket {
+                            width: 72mm;
+                            margin: 0 auto;
+                        }
+        
+                    }
+        
                 </style>
-
-
+        
             </head>
-
-
+        
+        
             <body>
-
-
-                <h2>
-                    LuckyTech
-                </h2>
-
-
-                <p>
-                    Folio:
-                    ${venta.folio}
-                </p>
-
-
-                <p>
-                    Fecha:
-                    ${new Date(
-                        venta.createdAt
-                    ).toLocaleString(
-                        "es-MX"
-                    )}
-                </p>
-
-
-                <p>
-                    Vendedor:
-                    ${venta.usuario?.nombre || "N/A"}
-                </p>
-
-
-                <div class="linea"></div>
-
-
-                ${
-                    venta.productos.map(
-                        producto => `
-
-                        <div class="producto">
-
-                            <span>
-                                ${producto.cantidad}
-                                x
-                                ${producto.nombre}
-                            </span>
-
-
-                            <span>
-                                ${formatoDinero(
-                                    producto.subtotal
-                                )}
-                            </span>
-
-                        </div>
-
-                        `
-                    ).join("")
-                }
-
-
-                <div class="linea"></div>
-
-
-                <p class="total">
-
-                    Total:
-                    ${formatoDinero(
-                        venta.total
-                    )}
-
-                </p>
-
-
-                <p>
-                    Pago:
-                    ${venta.metodoPago}
-                </p>
-
-
-                ${
-                    venta.estado === "CANCELADA"
-                    ?
-
-                    `
-
-                    <div class="linea"></div>
-
-                    <p class="cancelada">
-
-                        VENTA CANCELADA
-
+        
+                <main class="ticket">
+        
+        
+                    <header class="encabezado">
+        
+                        <h1 class="logo-texto">
+                            LuckyTech
+                        </h1>
+        
+                        <p class="subtitulo">
+                            COMPROBANTE DE VENTA
+                        </p>
+        
+                    </header>
+        
+        
+                    <div class="separador"></div>
+        
+        
+                    <div class="dato">
+        
+                        <span>Folio:</span>
+        
+                        <strong>
+                            ${folio}
+                        </strong>
+        
+                    </div>
+        
+        
+                    <div class="dato">
+        
+                        <span>Fecha:</span>
+        
+                        <strong>
+                            ${fecha}
+                        </strong>
+        
+                    </div>
+        
+        
+                    <div class="dato">
+        
+                        <span>Vendedor:</span>
+        
+                        <strong>
+                            ${vendedor}
+                        </strong>
+        
+                    </div>
+        
+        
+                    <div class="separador"></div>
+        
+        
+                    <p class="titulo-seccion">
+                        PRODUCTOS
                     </p>
-
-
-                    <p>
-
-                        Motivo:
-                        ${venta.motivoCancelacion || ""}
-
-                    </p>
-
-                    `
-
-                    :
-
-                    ""
-
-                }
-
-
-                <div class="linea"></div>
-
-
-                <p style="text-align:center">
-
-                    Gracias por su compra
-
-                </p>
-
-
+        
+        
+                    ${
+                        productosHTML ||
+                        "<p>Sin productos registrados.</p>"
+                    }
+                
+                
+                    <div class="separador"></div>
+                
+                
+                    <div class="total">
+                
+                        <span>TOTAL</span>
+                
+                        <strong>
+                            ${total}
+                        </strong>
+                
+                    </div>
+                
+                
+                    <div class="separador"></div>
+                
+                
+                    <div class="dato">
+                
+                        <span>Método de pago:</span>
+                
+                        <strong>
+                            ${metodoPago}
+                        </strong>
+                
+                    </div>
+                
+                
+                    ${
+                        esCancelada
+                            ? `
+                    
+                                <div class="separador"></div>
+                    
+                                <div class="estado-cancelado">
+                                    VENTA CANCELADA
+                                </div>
+                    
+                                <p class="motivo">
+                    
+                                    <strong>
+                                        Motivo de cancelación:
+                                    </strong>
+                    
+                                    <br>
+                    
+                                    ${motivoCancelacion}
+                    
+                                </p>
+                    
+                            `
+                            : ""
+                    }
+                
+                
+                    <div class="separador"></div>
+                
+                
+                    <footer class="pie">
+                
+                        ${
+                            esCancelada
+                                ? `
+                                    <strong>
+                                        COMPROBANTE DE CANCELACIÓN
+                                    </strong>
+                        
+                                    Esta venta se encuentra cancelada.
+                                `
+                                : `
+                                    <strong>
+                                        ¡Gracias por su compra!
+                                    </strong>
+                        
+                                    Conserve su comprobante.
+                                `
+                        }
+                    
+                    </footer>
+                    
+                    
+                </main>
+                    
             </body>
-
-
+                    
             </html>
-
+                    
         `);
-
-
+                    
+                    
         ventana.document.close();
-
-
-        ventana.print();
-
+                    
+        ventana.focus();
+                    
+                    
+        setTimeout(() => {
+        
+            ventana.print();
+        
+        }, 300);
+    
     };
-
+    
 
     const alternarDetalleVenta = (ventaId) => {
         setVentaDetalleId(
